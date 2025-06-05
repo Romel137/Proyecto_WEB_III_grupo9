@@ -1,0 +1,11 @@
+{% extends "turnos/base.html" %}
+{% block content %}
+<h2>Mis Turnos</h2>
+<ul>
+    {% for turno in turnos %}
+        <li>{{ turno.fecha }} - {{ turno.hora }} con {{ turno.doctor.nombre }}</li>
+    {% empty %}
+        <li>No tienes turnos agendados</li>
+    {% endfor %}
+</ul>
+{% endblock %}

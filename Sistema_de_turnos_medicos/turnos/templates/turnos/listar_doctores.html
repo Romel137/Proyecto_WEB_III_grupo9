@@ -1,0 +1,8 @@
+<h2>Lista de Doctores</h2>
+<ul>
+{% for doctor in doctores %}
+    <li>
+    {{ doctor.user.first_name }} {{ doctor.user.last_name }} - Especialidad: {{ doctor.especialidad }}
+    </li>  
+    {% endfor %}
+</ul>

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Sistema de Turnos Medicos</title>
+</head>
+<body>
+    <header>
+        <h1>Sistema de Turnos Medicos</h1>
+        <nav>
+            <a href="{% url 'inicio' %}">Inicio</a>
+            {% if user.is_authenticated %}
+                <a href="{% url 'listar_doctores' %}">Doctores</a>
+                <a href="{% url 'listar_turnos' %}">Mis Turnos</a>
+                <a href="{% url 'crear_turno' %}">Nuevo Turno</a>
+                <span>👤 {{ user.username }}</span>
+                <a href="{% url 'cerrar_sesion' %}">Cerrar Sesión</a>
+            {% else %}
+                <a href="{% url 'iniciar_sesion' %}">Iniciar Sesión</a>
+                <a href="{% url 'registro' %}">Registrarse</a>
+                <a href="{% url 'registro_doctor' %}">Registrarse como Doctor</a>
+            {% endif %}
+        </nav>
+        <hr>
+    </header>
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>
