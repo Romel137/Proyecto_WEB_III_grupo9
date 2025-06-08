@@ -1,5 +1,48 @@
-{% extends "turnos/base.html" %}
+{% extends 'base.html' %}
+
 {% block content %}
-<h2>Bienvenido al Sistema de Turnos Medicos</h2>
-<p>Aqui puedes gestionar tus turnos medicos</p>
+<div class="container mt-4">
+    <h1>Bienvenido al Sistema de Turnos Médicos</h1>
+
+    <div class="row mt-4">
+        <div class="col-md-3">
+            <div class="card text-white bg-primary mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Turnos</h5>
+                    <p class="card-text">{{ total_turnos }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-success mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Doctores</h5>
+                    <p class="card-text">{{ total_doctores }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-info mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Pacientes</h5>
+                    <p class="card-text">{{ total_pacientes }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-warning mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Próximo Turno</h5>
+                    <p class="card-text">
+                        {% if proximo_turno %}
+                            {{ proximo_turno.paciente }} con {{ proximo_turno.doctor }} el {{ proximo_turno.fecha }} a las {{ proximo_turno.hora }}
+                        {% else %}
+                            No hay turnos agendados
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
