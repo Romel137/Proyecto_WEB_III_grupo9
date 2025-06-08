@@ -1,9 +1,19 @@
 {% extends "turnos/base.html" %}
 {% block content %}
-<h2>Crear Especialidad</h2>
+<h2>Registrar Nueva Especialidad</h2>
 <form method="post">
     {% csrf_token %}
     {{ form.as_p }}
-    <button type="submit">Guardar</button>
+    <button type="submit">Guardar Especialidad</button>
 </form>
+
+{% if messages %}
+  <ul class="messages">
+    {% for message in messages %}
+      <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>
+        {{ message }}
+      </li>
+    {% endfor %}
+  </ul>
+{% endif %}
 {% endblock %}
