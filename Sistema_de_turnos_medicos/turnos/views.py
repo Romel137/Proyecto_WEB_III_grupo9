@@ -145,3 +145,21 @@ def reservar_turno(request):
     else:
         form = TurnoForm()
     return render(request, 'reservar_turno.html', {'form': form})
+
+from django.utils import timezone
+
+def inicio(request):
+    total_turnos = Turno.objects.count()
+    total_doctores = Doctor.objects.count()
+    total_pacientes = Paciente.objects.count()
+    proximo_turno = Turno.objects.filter(fecha__gte=timezone.now()).order_by('fecha').first()
+
+    context = {
+        'total_turnos': total_turnos,
+        'total_doctores': total_doctores,
+        'total_pacientes': total_pacientes,
+        'proximo_turno': proximo_turno
+    }
+
+    return render(request, 'turnos/inicio.html', context)
+
