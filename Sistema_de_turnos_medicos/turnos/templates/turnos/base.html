@@ -2,17 +2,25 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Sistema de Turnos Medicos</title>
+    <title>Sistema de Turnos Médicos</title>
 </head>
 <body>
     <header>
-        <h1>Sistema de Turnos Medicos</h1>
+        <h1>Sistema de Turnos Médicos</h1>
         <nav>
             <a href="{% url 'inicio' %}">Inicio</a>
+
             {% if user.is_authenticated %}
-                <a href="{% url 'listar_doctores' %}">Doctores</a>
-                <a href="{% url 'listar_turnos' %}">Mis Turnos</a>
-                <a href="{% url 'crear_turno' %}">Nuevo Turno</a>
+                {% if perfil.es_paciente %}
+                    <a href="{% url 'listar_doctores' %}">Doctores</a>
+                    <a href="{% url 'listar_turnos' %}">Mis Turnos</a>
+                    <a href="{% url 'crear_turno' %}">Nuevo Turno</a>
+
+                {% elif perfil.es_doctor %}
+                    <a href="{% url 'listar_doctores' %}">Doctores</a>
+                    <a href="{% url 'mis_pacientes' %}">Mis Pacientes</a>
+
+                {% endif %}
                 <span>👤 {{ user.username }}</span>
                 <a href="{% url 'cerrar_sesion' %}">Cerrar Sesión</a>
             {% else %}
@@ -23,6 +31,7 @@
         </nav>
         <hr>
     </header>
+
     <main>
         {% block content %}{% endblock %}
     </main>

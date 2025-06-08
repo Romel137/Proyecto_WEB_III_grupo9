@@ -7,7 +7,7 @@ from .forms import RegistroForm, TurnoForm
 from .models import Turno, Doctor, Perfil, Paciente
 from django.core.mail import send_mail
 from .forms import DoctorRegistroForm
-
+from django.contrib.auth.models import User
 def inicio(request):
     return render(request, 'turnos/inicio.html')
 
@@ -91,22 +91,13 @@ def crear_turno(request):
         if form.is_valid():
             turno = form.save(commit=False)
             turno.paciente = Paciente.objects.get(user=request.user)
+            turno.especialidad = turno.doctor.especialidad  # importante
             turno.save()
-
-            mensaje = f"Hola {turno.paciente.user.username}, tu turno con el Dr. {turno.doctor.nombre} ha sido confirmado para el {turno.fecha} a las {turno.hora}."
-            send_mail(
-                subject="Confirmación de Turno Médico",
-                message=mensaje,
-                from_email=None,  # Usa DEFAULT_FROM_EMAIL
-                recipient_list=[turno.paciente.email],
-                fail_silently=False,
-            )
-
             return redirect('listar_turnos')
     else:
         form = TurnoForm()
-    return render(request, 'turnos/crear_turno.html', {'form': form})
 
+    return render(request, 'turnos/crear_turno.html', {'form': form})
 @login_required
 def mis_turnos(request):
     try:
@@ -114,7 +105,7 @@ def mis_turnos(request):
             paciente = Paciente.objects.get(user=request.user)
             turnos = Turno.objects.filter(paciente=paciente)
         elif request.user.perfil.es_doctor:
-            doctor = Doctor.objects.get(nombre=request.user.username)
+            doctor = Doctor.objects.get(user=request.user)
             turnos = Turno.objects.filter(doctor=doctor)
         else:
             turnos = Turno.objects.none()
@@ -135,13 +126,34 @@ def registrar_doctor(request):
 
 @login_required
 def reservar_turno(request):
+    if not request.user.perfil.es_paciente:
+        return HttpResponseForbidden("Solo los pacientes pueden crear turnos.")
+
     if request.method == 'POST':
         form = TurnoForm(request.POST)
         if form.is_valid():
             turno = form.save(commit=False)
-            turno.paciente = request.user
+            turno.paciente = Paciente.objects.get(user=request.user)
+            turno.especialidad = turno.doctor.especialidad  # Se asigna automáticamente
             turno.save()
-            return redirect('lista_turnos')  # Cambia por tu URL real
+            return redirect('listar_turnos')
     else:
         form = TurnoForm()
+    
     return render(request, 'reservar_turno.html', {'form': form})
+
+@login_required
+def mis_pacientes(request):
+    pacientes = Paciente.objects.all()
+
+    
+    pacientes_con_doctores = []
+    for paciente in pacientes:
+        turnos = Turno.objects.filter(paciente=paciente)
+        doctores = [turno.doctor.user.get_full_name() for turno in turnos]
+        pacientes_con_doctores.append({
+            'paciente': paciente,
+            'doctores': list(set(doctores))  # lista sin duplicados
+        })
+
+    return render(request, 'turnos/mis_pacientes.html', {'pacientes_con_doctores': pacientes_con_doctores})

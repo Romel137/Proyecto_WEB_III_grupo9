@@ -1,0 +1,22 @@
+<h1>Pacientes</h1>
+
+<ul>
+  {% for item in pacientes_con_doctores %}
+    <li>
+      <strong>Paciente:</strong> {{ item.paciente.user}}<br>
+      <strong>Doctores que lo atienden:</strong>
+      {% if item.doctores %}
+        <ul>
+          {% for doctor in item.doctores %}
+            <li>{{ doctor }}</li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <em>No tiene doctores asignados.</em>
+      {% endif %}
+      <p> </p>
+    </li>
+  {% empty %}
+    <li>No hay pacientes registrados.</li>
+  {% endfor %}
+</ul>
