@@ -12,4 +12,6 @@ urlpatterns = [
     path('logout/', views.cerrar_sesion, name='cerrar_sesion'),
     path('mis-turnos/', views.mis_turnos, name='mis_turnos'),
     path('registro-doctor/', views.registrar_doctor, name='registro_doctor'),
+    path('turno/<int:pk>/editar/', views.editar_turno, name='editar_turno'),
+    path('turno/<int:pk>/eliminar/', views.eliminar_turno, name='eliminar_turno'),
 ]

@@ -1,10 +1,17 @@
 {% extends "turnos/base.html" %}
+
 {% block content %}
-<h2>Agendar turno con {{ doctor.nombre }}</h2>
-<form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Confirmar Turno</button>
-</form>
-<a href="{% url 'listar_doctores' %}">Cancelar</a>
+  <div class="container">
+    <h1>Detalles del Doctor</h1>
+
+    <div class="card">
+      <div class="card-body">
+        <h2>{{ doctor.user.get_full_name }}</h2>
+        <p><strong>Especialidad:</strong> {{ doctor.especialidad.nombre }}</p>
+        <p><strong>Correo:</strong> {{ doctor.user.email }}</p>
+      </div>
+    </div>
+
+    <a href="{% url 'listar_doctores' %}" class="btn btn-secondary mt-3">Volver a la lista de doctores</a>
+  </div>
 {% endblock %}

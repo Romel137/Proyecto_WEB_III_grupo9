@@ -8,18 +8,15 @@ class RegistroForm(UserCreationForm):
         ('doctor', 'Doctor'),
     )
     rol = forms.ChoiceField(choices=ROLES, widget=forms.RadioSelect)
-
     class Meta:
         model = User
         fields = ['username', 'password1', 'password2', 'rol']
 
 class TurnoForm(forms.ModelForm):
     especialidad = forms.ModelChoiceField(queryset=Especialidad.objects.all(), required=True)
-
     class Meta:
         model = Turno
         fields = ['especialidad', 'doctor', 'fecha', 'hora']
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if 'especialidad' in self.data:
@@ -37,11 +34,9 @@ class DoctorRegisterForm(forms.ModelForm):
     email = forms.EmailField(label='Correo electronico')
     first_name = forms.CharField(label='Nombre')
     last_name = forms.CharField(label='Apellido')
-
     class Meta:
         model = Doctor
         fields = ['especialidad']
-
     def save(self, commit=True):
         user = User.objects.create_user(
             username=self.cleaned_data['username'],
@@ -61,11 +56,9 @@ class DoctorRegistroForm(forms.ModelForm):
     last_name = forms.CharField(label="Apellido")
     email = forms.EmailField()
     password = forms.CharField(widget=forms.PasswordInput)
-    
     class Meta:
         model = Doctor
         fields = ['especialidad']
-
     def save(self, commit=True):
         user = User.objects.create_user(
             username=self.cleaned_data['email'],
