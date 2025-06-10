@@ -3,14 +3,14 @@ from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 
 class Especialidad(models.Model):
-    nombre = models.CharField(max_length=100)
+    nombre = models.CharField(max_length=100, unique=True)
 
     def __str__(self):
         return self.nombre
 
 class Doctor(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    especialidad = models.ForeignKey(Especialidad, on_delete=models.CASCADE)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='doctor_profile')
+    especialidad = models.ForeignKey(Especialidad, on_delete=models.CASCADE, related_name='doctors')
 
 class Paciente(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)

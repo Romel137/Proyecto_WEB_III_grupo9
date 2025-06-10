@@ -3,7 +3,7 @@ from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseForbidden
 from django.contrib.auth.forms import AuthenticationForm
-from .forms import RegistroForm, TurnoForm
+from .forms import RegistroForm, TurnoForm, EspecialidadForm
 from .models import Turno, Doctor, Perfil, Paciente
 from django.core.mail import send_mail
 from .forms import DoctorRegistroForm
@@ -41,13 +41,18 @@ def iniciar_sesion(request):
         if form.is_valid():
             user = form.get_user()
             login(request, user)
+            messages.success(request, f'¡Bienvenido, {user.username}!')
             return redirect('inicio')
+        else:
+            print("AuthenticationForm errors:", form.errors) 
+            messages.error(request, 'Nombre de usuario o contraseña incorrectos.')
     else:
         form = AuthenticationForm()
     return render(request, 'turnos/login.html', {'form': form})
 
 def cerrar_sesion(request):
     logout(request)
+    messages.info(request, 'Has cerrado sesión correctamente.')
     return redirect('inicio')
 
 def listar_doctores(request):
