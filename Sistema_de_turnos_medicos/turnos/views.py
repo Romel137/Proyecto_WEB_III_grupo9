@@ -3,10 +3,19 @@ from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseForbidden
 from django.contrib.auth.forms import AuthenticationForm
-from .forms import RegistroForm, TurnoForm
+from .forms import RegistroForm, TurnoForm, EspecialidadForm
 from .models import Turno, Doctor, Perfil, Paciente
 from django.core.mail import send_mail
 from .forms import DoctorRegistroForm
+from django.contrib import messages
+
+def is_patient(user):
+    """Checks if the user has a Perfil and is marked as a patient."""
+    return hasattr(user, 'perfil') and user.perfil.es_paciente
+
+def is_doctor(user):
+    """Checks if the user has a Perfil and is marked as a doctor."""
+    return hasattr(user, 'perfil') and user.perfil.es_doctor
 
 def inicio(request):
     return render(request, 'turnos/inicio.html')
@@ -36,13 +45,18 @@ def iniciar_sesion(request):
         if form.is_valid():
             user = form.get_user()
             login(request, user)
+            messages.success(request, f'¡Bienvenido, {user.username}!')
             return redirect('inicio')
+        else:
+            print("AuthenticationForm errors:", form.errors) 
+            messages.error(request, 'Nombre de usuario o contraseña incorrectos.')
     else:
         form = AuthenticationForm()
     return render(request, 'turnos/login.html', {'form': form})
 
 def cerrar_sesion(request):
     logout(request)
+    messages.info(request, 'Has cerrado sesión correctamente.')
     return redirect('inicio')
 
 def listar_doctores(request):
@@ -163,3 +177,13 @@ def inicio(request):
 
     return render(request, 'turnos/inicio.html', context)
 
+def crear_especialidad(request):
+    if request.method == 'POST':
+        form = EspecialidadForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Especialidad creada con éxito.")
+            return redirect('crear_turno') 
+    else:
+        form = EspecialidadForm()
+    return render(request, 'turnos/crear_especialidad.html', {'form': form})
