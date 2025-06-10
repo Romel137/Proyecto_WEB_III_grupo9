@@ -1,6 +1,25 @@
-<h2>Reservar Turno</h2>
-<form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Reservar</button>
-</form>
+{% extends "base.html" %}
+{% block content %}
+  <h2>Reservar Turno</h2>
+
+  {# 1) Formulario de búsqueda por especialidad #}
+  <form method="get">
+    {{ form.especialidad.label_tag }}
+    {{ form.especialidad }}
+    <button type="submit" name="buscar">Buscar doctores</button>
+  </form>
+
+  {# Solo si ya hemos filtrado (o recargado GET) mostramos el resto #}
+  {% if form.data.especialidad %}
+    <form method="post">
+      {% csrf_token %}
+      {{ form.doctor.label_tag }}
+      {{ form.doctor }}
+      {{ form.fecha.label_tag }}
+      {{ form.fecha }}
+      {{ form.hora.label_tag }}
+      {{ form.hora }}
+      <button type="submit">Reservar</button>
+    </form>
+  {% endif %}
+{% endblock %}

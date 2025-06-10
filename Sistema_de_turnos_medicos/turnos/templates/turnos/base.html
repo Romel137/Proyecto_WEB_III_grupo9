@@ -8,19 +8,25 @@
     <header>
         <h1>Sistema de Turnos Medicos</h1>
         <nav>
-            <a href="{% url 'inicio' %}">Inicio</a>
-            {% if user.is_authenticated %}
-                <a href="{% url 'listar_doctores' %}">Doctores</a>
-                <a href="{% url 'listar_turnos' %}">Mis Turnos</a>
-                <a href="{% url 'crear_turno' %}">Nuevo Turno</a>
-                <span>👤 {{ user.username }}</span>
-                <a href="{% url 'cerrar_sesion' %}">Cerrar Sesión</a>
-            {% else %}
-                <a href="{% url 'iniciar_sesion' %}">Iniciar Sesión</a>
-                <a href="{% url 'registro' %}">Registrarse</a>
-                <a href="{% url 'registro_doctor' %}">Registrarse como Doctor</a>
+        <a href="{% url 'inicio' %}">Inicio</a>
+        {% if user.is_authenticated %}
+            <a href="{% url 'listar_doctores' %}">Doctores</a>
+            <a href="{% url 'listar_turnos' %}">Mis Turnos</a>
+            <a href="{% url 'crear_turno' %}">Nuevo Turno</a>
+            
+            {% if user.perfil.es_doctor %}
+                <a href="{% url 'crear_especialidad' %}">Nueva Especialidad</a>
             {% endif %}
+            
+            <span>👤 {{ user.username }}</span>
+            <a href="{% url 'cerrar_sesion' %}">Cerrar Sesión</a>
+        {% else %}
+            <a href="{% url 'iniciar_sesion' %}">Iniciar Sesión</a>
+            <a href="{% url 'registro' %}">Registrarse</a>
+            <a href="{% url 'registro_doctor' %}">Registrarse como Doctor</a>
+        {% endif %}
         </nav>
+
         <hr>
     </header>
     <main>

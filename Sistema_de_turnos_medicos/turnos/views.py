@@ -7,15 +7,11 @@ from .forms import RegistroForm, TurnoForm, EspecialidadForm
 from .models import Turno, Doctor, Perfil, Paciente
 from django.core.mail import send_mail
 from .forms import DoctorRegistroForm
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, redirect
+from django.http import HttpResponseForbidden
 from django.contrib import messages
-
-def is_patient(user):
-    """Checks if the user has a Perfil and is marked as a patient."""
-    return hasattr(user, 'perfil') and user.perfil.es_paciente
-
-def is_doctor(user):
-    """Checks if the user has a Perfil and is marked as a doctor."""
-    return hasattr(user, 'perfil') and user.perfil.es_doctor
+from .forms import EspecialidadForm
 
 def inicio(request):
     return render(request, 'turnos/inicio.html')
@@ -149,17 +145,29 @@ def registrar_doctor(request):
 
 @login_required
 def reservar_turno(request):
-    if request.method == 'POST':
+    # Al inicio no hay selección de especialidad
+    form = None
+    doctores_filtrados = None
+
+    # Si vienen datos por GET (al pulsar “Buscar”)
+    if request.method == 'GET' and 'buscar' in request.GET:
+        # Creamos el formulario pasando GET para que __init__ filtre doctores
+        form = TurnoForm(request.GET)
+    # Si envían POST (al pulsar “Reservar”)
+    elif request.method == 'POST':
         form = TurnoForm(request.POST)
         if form.is_valid():
             turno = form.save(commit=False)
-            turno.paciente = request.user
+            turno.paciente = Paciente.objects.get(user=request.user)
             turno.save()
-            return redirect('lista_turnos')  # Cambia por tu URL real
+            return redirect('lista_turnos')
     else:
+        # Primera carga, o recarga sin pulsar “Buscar”
         form = TurnoForm()
-    return render(request, 'reservar_turno.html', {'form': form})
 
+    return render(request, 'turnos/reservar_turno.html', {
+        'form': form
+    })
 from django.utils import timezone
 
 def inicio(request):
@@ -177,13 +185,19 @@ def inicio(request):
 
     return render(request, 'turnos/inicio.html', context)
 
+@login_required
 def crear_especialidad(request):
+    
+    if not request.user.perfil.es_doctor and not request.user.is_superuser:
+        return HttpResponseForbidden("No tienes permiso para crear especialidades.")
+
     if request.method == 'POST':
         form = EspecialidadForm(request.POST)
         if form.is_valid():
             form.save()
-            messages.success(request, "Especialidad creada con éxito.")
-            return redirect('crear_turno') 
+            messages.success(request, "Especialidad creada correctamente.")
+            return redirect('inicio')
     else:
         form = EspecialidadForm()
+
     return render(request, 'turnos/crear_especialidad.html', {'form': form})
