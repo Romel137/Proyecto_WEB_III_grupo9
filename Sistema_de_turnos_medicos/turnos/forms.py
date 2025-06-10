@@ -2,6 +2,10 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from .models import Turno, Especialidad, Doctor
+from django import forms
+from .models import Especialidad
+from .models import Doctor, Especialidad
+
 class RegistroForm(UserCreationForm):
     ROLES = (
         ('paciente', 'Paciente'),
@@ -61,7 +65,12 @@ class DoctorRegistroForm(forms.ModelForm):
     last_name = forms.CharField(label="Apellido")
     email = forms.EmailField()
     password = forms.CharField(widget=forms.PasswordInput)
-    
+    especialidad = forms.ModelChoiceField(
+        queryset=Especialidad.objects.all(),
+        empty_label="Seleccione una especialidad",
+        label="Especialidad"
+    )
+
     class Meta:
         model = Doctor
         fields = ['especialidad']
@@ -76,6 +85,15 @@ class DoctorRegistroForm(forms.ModelForm):
         )
         doctor = super().save(commit=False)
         doctor.user = user
+        doctor.especialidad = self.cleaned_data['especialidad']
         if commit:
             doctor.save()
         return doctor
+    
+class EspecialidadForm(forms.ModelForm):
+    class Meta:
+        model = Especialidad
+        fields = ['nombre']
+        labels = {
+            'nombre': 'Nombre de la Especialidad'
+        }

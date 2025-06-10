@@ -7,6 +7,11 @@ from .forms import RegistroForm, TurnoForm
 from .models import Turno, Doctor, Perfil, Paciente
 from django.core.mail import send_mail
 from .forms import DoctorRegistroForm
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, redirect
+from django.http import HttpResponseForbidden
+from django.contrib import messages
+from .forms import EspecialidadForm
 
 def inicio(request):
     return render(request, 'turnos/inicio.html')
@@ -163,3 +168,19 @@ def inicio(request):
 
     return render(request, 'turnos/inicio.html', context)
 
+@login_required
+def crear_especialidad(request):
+    
+    if not request.user.perfil.es_doctor and not request.user.is_superuser:
+        return HttpResponseForbidden("No tienes permiso para crear especialidades.")
+
+    if request.method == 'POST':
+        form = EspecialidadForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Especialidad creada correctamente.")
+            return redirect('inicio')
+    else:
+        form = EspecialidadForm()
+
+    return render(request, 'turnos/crear_especialidad.html', {'form': form})

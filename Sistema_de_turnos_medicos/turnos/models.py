@@ -12,9 +12,6 @@ class Doctor(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     especialidad = models.ForeignKey(Especialidad, on_delete=models.CASCADE)
 
-    def __str__(self):
-        return f"Dr. {self.user.get_full_name()} - {self.especialidad.nombre}"
-
 class Paciente(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     telefono = models.CharField(max_length=20)
@@ -39,7 +36,8 @@ class Turno(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.doctor.nombre} - {self.fecha} {self.hora}"
+        return f"{self.doctor.user.get_full_name()} - {self.fecha} {self.hora}"
+
 
 class Perfil(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
