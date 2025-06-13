@@ -91,31 +91,31 @@ def listar_turnos(request):
     turnos = Turno.objects.filter(paciente=paciente)
     return render(request, 'turnos/listar_turnos.html', {'turnos': turnos})
 
-@login_required
-def crear_turno(request):
-    if not request.user.perfil.es_paciente:
-        return HttpResponseForbidden("Solo los pacientes pueden crear turnos.")
-    
-    if request.method == 'POST':
-        form = TurnoForm(request.POST)
-        if form.is_valid():
-            turno = form.save(commit=False)
-            turno.paciente = Paciente.objects.get(user=request.user)
-            turno.save()
+#@login_required
+#def crear_turno(request):
+ #   if not request.user.perfil.es_paciente:
+  #      return HttpResponseForbidden("Solo los pacientes pueden crear turnos.")
+   # 
+    #if request.method == 'POST':
+     #   form = TurnoForm(request.POST)
+      #  if form.is_valid():
+       #     turno = form.save(commit=False)
+        #    turno.paciente = Paciente.objects.get(user=request.user)
+         #   turno.save()
 
-            mensaje = f"Hola {turno.paciente.user.username}, tu turno con el Dr. {turno.doctor.nombre} ha sido confirmado para el {turno.fecha} a las {turno.hora}."
-            send_mail(
-                subject="Confirmación de Turno Médico",
-                message=mensaje,
-                from_email=None,  # Usa DEFAULT_FROM_EMAIL
-                recipient_list=[turno.paciente.email],
-                fail_silently=False,
-            )
+          #  mensaje = f"Hola {turno.paciente.user.username}, tu turno con el Dr. {turno.doctor.nombre} ha sido confirmado para el {turno.fecha} a las {turno.hora}."
+           # send_mail(
+            #    subject="Confirmación de Turno Médico",
+             #   message=mensaje,
+              #  from_email=None,  # Usa DEFAULT_FROM_EMAIL
+               # recipient_list=[turno.paciente.email],
+                #fail_silently=False,
+            #)
 
-            return redirect('listar_turnos')
-    else:
-        form = TurnoForm()
-    return render(request, 'turnos/crear_turno.html', {'form': form})
+            #return redirect('listar_turnos')
+    #else:
+     #   form = TurnoForm()
+    #return render(request, 'turnos/crear_turno.html', {'form': form})
 
 @login_required
 def mis_turnos(request):
@@ -124,8 +124,8 @@ def mis_turnos(request):
             paciente = Paciente.objects.get(user=request.user)
             turnos = Turno.objects.filter(paciente=paciente)
         elif request.user.perfil.es_doctor:
-            doctor = Doctor.objects.get(nombre=request.user.username)
-            turnos = Turno.objects.filter(doctor=doctor)
+             doctor = Doctor.objects.get(user=request.user)
+             turnos = Turno.objects.filter(doctor=doctor)
         else:
             turnos = Turno.objects.none()
     except:
@@ -144,30 +144,73 @@ def registrar_doctor(request):
     return render(request, 'turnos/registrar_doctor.html', {'form': form})
 
 @login_required
-def reservar_turno(request):
-    # Al inicio no hay selección de especialidad
-    form = None
-    doctores_filtrados = None
+def crear_turno(request):
+    if not request.user.perfil.es_paciente:
+        return HttpResponseForbidden("Solo los pacientes pueden crear turnos.")
 
-    # Si vienen datos por GET (al pulsar “Buscar”)
-    if request.method == 'GET' and 'buscar' in request.GET:
-        # Creamos el formulario pasando GET para que __init__ filtre doctores
-        form = TurnoForm(request.GET)
-    # Si envían POST (al pulsar “Reservar”)
-    elif request.method == 'POST':
+    especialidad_seleccionada = request.GET.get('especialidad')
+    doctor_seleccionado = request.GET.get('doctor')
+    fecha_seleccionada = request.GET.get('fecha')
+    hora_seleccionada = request.GET.get('hora')
+
+    # Paso 1: Selección de especialidad
+    especialidades = Doctor.objects.values_list('especialidad__id', 'especialidad__nombre').distinct()
+    doctores = Doctor.objects.none()
+    turnos_ocupados = []
+
+    if especialidad_seleccionada:
+        doctores = Doctor.objects.filter(especialidad__id=especialidad_seleccionada)
+    if doctor_seleccionado and fecha_seleccionada:
+        # Busca los turnos ya reservados para ese doctor y fecha
+        turnos_ocupados = Turno.objects.filter(
+            doctor__id=doctor_seleccionado,
+            fecha=fecha_seleccionada
+        ).values_list('hora', flat=True)
+
+    if request.method == 'POST':
         form = TurnoForm(request.POST)
         if form.is_valid():
             turno = form.save(commit=False)
             turno.paciente = Paciente.objects.get(user=request.user)
-            turno.save()
-            return redirect('lista_turnos')
+            # Validar que el doctor esté disponible en esa fecha y hora
+            existe = Turno.objects.filter(
+                doctor=turno.doctor,
+                fecha=turno.fecha,
+                hora=turno.hora
+            ).exists()
+            if existe:
+                messages.error(request, "El doctor ya tiene un turno reservado en ese horario.")
+            else:
+                turno.save()
+                mensaje = f"Hola {turno.paciente.user.username}, tu turno con el Dr. {turno.doctor.user.get_full_name()} ha sido confirmado para el {turno.fecha} a las {turno.hora}."
+                send_mail(
+                    subject="Confirmación de Turno Médico",
+                    message=mensaje,
+                    from_email=None,
+                    recipient_list=[turno.paciente.email],
+                    fail_silently=False,
+                )
+                return redirect('listar_turnos')
     else:
-        # Primera carga, o recarga sin pulsar “Buscar”
-        form = TurnoForm()
+        form = TurnoForm(initial={
+            'especialidad': especialidad_seleccionada,
+            'doctor': doctor_seleccionado,
+            'fecha': fecha_seleccionada,
+            'hora': hora_seleccionada,
+        })
 
-    return render(request, 'turnos/reservar_turno.html', {
-        'form': form
+    return render(request, 'turnos/crear_turno.html', {
+        'form': form,
+        'especialidades': especialidades,
+        'doctores': doctores,
+        'turnos_ocupados': list(turnos_ocupados),
+        'especialidad_seleccionada': especialidad_seleccionada,
+        'doctor_seleccionado': doctor_seleccionado,
+        'fecha_seleccionada': fecha_seleccionada,
+        'hora_seleccionada': hora_seleccionada,
     })
+
+
 from django.utils import timezone
 
 def inicio(request):

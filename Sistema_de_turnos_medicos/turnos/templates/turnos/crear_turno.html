@@ -1,9 +1,49 @@
 {% extends "turnos/base.html" %}
 {% block content %}
 <h2>Reservar un Turno</h2>
-<form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Reservar</button>
-</form>
+
+{# Paso 1: Selección de especialidad #}
+{% if not especialidad_seleccionada %}
+    <form method="get">
+        <label for="especialidad">Especialidad:</label>
+        <select name="especialidad" id="especialidad" required>
+            <option value="">Seleccione una especialidad</option>
+            {% for id, nombre in especialidades %}
+                <option value="{{ id }}">{{ nombre }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit">Buscar doctores</button>
+    </form>
+
+{# Paso 2: Selección de doctor, fecha y hora #}
+{% elif not doctor_seleccionado %}
+    <form method="get">
+        <input type="hidden" name="especialidad" value="{{ especialidad_seleccionada }}">
+        <label for="doctor">Doctor:</label>
+        <select name="doctor" id="doctor" required>
+            <option value="">Seleccione un doctor</option>
+            {% for doctor in doctores %}
+                <option value="{{ doctor.id }}">{{ doctor.user.get_full_name }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit">Elegir doctor</button>
+    </form>
+
+{# Paso 3: Selección de fecha y hora y reserva final #}
+{% else %}
+    <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="especialidad" value="{{ especialidad_seleccionada }}">
+        <input type="hidden" name="doctor" value="{{ doctor_seleccionado }}">
+        <label for="fecha">Fecha:</label>
+        <input type="date" name="fecha" id="fecha" value="{{ fecha_seleccionada|default:'' }}" required>
+        <label for="hora">Hora:</label>
+        <input type="time" name="hora" id="hora" value="{{ hora_seleccionada|default:'' }}" required>
+        {% if turnos_ocupados %}
+            <p><strong>Horas ocupadas para este doctor y fecha:</strong> {{ turnos_ocupados|join:", " }}</p>
+        {% endif %}
+        <button type="submit">Reservar</button>
+    </form>
+{% endif %}
+
 {% endblock %}

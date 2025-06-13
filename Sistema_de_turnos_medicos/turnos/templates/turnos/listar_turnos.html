@@ -3,7 +3,7 @@
 <h2>Mis Turnos</h2>
 <ul>
     {% for turno in turnos %}
-        <li>{{ turno.fecha }} - {{ turno.hora }} con {{ turno.doctor.nombre }}</li>
+        <li>{{ turno.fecha }} - {{ turno.hora }} con el Doctor: {{ turno.doctor.user.get_full_name }}</li>
     {% empty %}
         <li>No tienes turnos agendados</li>
     {% endfor %}
