@@ -1,8 +1,13 @@
-<h2>Lista de Doctores</h2>
-<ul>
-{% for doctor in doctores %}
-    <li>
-    {{ doctor.user.first_name }} {{ doctor.user.last_name }} - Especialidad: {{ doctor.especialidad }}
-    </li>  
-    {% endfor %}
-</ul>
+{% extends "turnos/base.html" %}
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-3">Lista de Doctores</h2>
+    <ul class="list-group">
+        {% for doctor in doctores %}
+            <li class="list-group-item">
+                {{ doctor.user.first_name }} {{ doctor.user.last_name }} - Especialidad: {{ doctor.especialidad }}
+            </li>
+        {% endfor %}
+    </ul>
+</div>
+{% endblock %}

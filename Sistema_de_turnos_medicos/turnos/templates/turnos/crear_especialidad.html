@@ -1,5 +1,4 @@
 {% extends 'turnos/base.html' %}
-
 {% block content %}
 <h2>Registrar Nueva Especialidad</h2>
 <form method="post">
@@ -7,7 +6,6 @@
     {{ form.as_p }}
     <button type="submit">Guardar Especialidad</button>
 </form>
-
 {% if messages %}
   <ul class="messages">
     {% for message in messages %}

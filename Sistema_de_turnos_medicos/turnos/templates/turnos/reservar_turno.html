@@ -1,25 +1,33 @@
 {% extends "turnos/base.html" %}
 {% block content %}
-  <h2>Reservar Turno</h2>
-
-  {# 1) Formulario de búsqueda por especialidad #}
-  <form method="get">
-    {{ form.especialidad.label_tag }}
-    {{ form.especialidad }}
-    <button type="submit" name="buscar">Buscar doctores</button>
-  </form>
-
-  {# Solo si ya hemos filtrado (o recargado GET) mostramos el resto #}
-  {% if form.data.especialidad %}
-    <form method="post">
-      {% csrf_token %}
-      {{ form.doctor.label_tag }}
-      {{ form.doctor }}
-      {{ form.fecha.label_tag }}
-      {{ form.fecha }}
-      {{ form.hora.label_tag }}
-      {{ form.hora }}
-      <button type="submit">Reservar</button>
+<div class="container mt-4">
+    <h2>Reservar Turno</h2>
+    <!-- Formulario de busqueda -->
+    <form method="get" class="mb-4">
+        <div class="mb-3">
+            {{ form.especialidad.label_tag }}
+            {{ form.especialidad }}
+        </div>
+        <button type="submit" name="buscar" class="btn btn-info">Buscar doctores</button>
     </form>
-  {% endif %}
+    {% if form.data.especialidad %}
+    <!-- Formulario de reserva -->
+    <form method="post" class="mt-4">
+        {% csrf_token %}
+        <div class="mb-3">
+            {{ form.doctor.label_tag }}
+            {{ form.doctor }}
+        </div>
+        <div class="mb-3">
+            {{ form.fecha.label_tag }}
+            {{ form.fecha }}
+        </div>
+        <div class="mb-3">
+            {{ form.hora.label_tag }}
+            {{ form.hora }}
+        </div>
+        <button type="submit" class="btn btn-primary">Reservar</button>
+    </form>
+    {% endif %}
+</div>
 {% endblock %}
