@@ -3,25 +3,18 @@ from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseForbidden
 from django.contrib.auth.forms import AuthenticationForm
-from .forms import RegistroForm, TurnoForm
+from .forms import RegistroForm, TurnoForm, EspecialidadForm
 from .models import Turno, Doctor, Perfil, Paciente
 from django.core.mail import send_mail
 from .forms import DoctorRegistroForm
-from django.utils import timezone
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, redirect
+from django.http import HttpResponseForbidden
+from django.contrib import messages
+from .forms import EspecialidadForm
 
 def inicio(request):
-    total_turnos = Turno.objects.count()
-    total_doctores = Doctor.objects.count()
-    total_pacientes = Paciente.objects.count()
-    proximo_turno = Turno.objects.filter(fecha__gte=timezone.now()).order_by('fecha', 'hora').first()
-
-    context = {
-        'total_turnos': total_turnos,
-        'total_doctores': total_doctores,
-        'total_pacientes': total_pacientes,
-        'proximo_turno': proximo_turno
-    }
-    return render(request, 'turnos/inicio.html', context)
+    return render(request, 'turnos/inicio.html')
 
 def registro(request):
     if request.method == 'POST':
@@ -48,13 +41,18 @@ def iniciar_sesion(request):
         if form.is_valid():
             user = form.get_user()
             login(request, user)
+            messages.success(request, f'¡Bienvenido, {user.username}!')
             return redirect('inicio')
+        else:
+            print("AuthenticationForm errors:", form.errors) 
+            messages.error(request, 'Nombre de usuario o contraseña incorrectos.')
     else:
         form = AuthenticationForm()
     return render(request, 'turnos/login.html', {'form': form})
 
 def cerrar_sesion(request):
     logout(request)
+    messages.info(request, 'Has cerrado sesión correctamente.')
     return redirect('inicio')
 
 def listar_doctores(request):
@@ -72,7 +70,7 @@ def detalle_doctor(request, pk):
             turno = form.save(commit=False)
             turno.paciente = Paciente.objects.get(user=request.user)
             turno.doctor = doctor
-            turno.especialidad = doctor.especialidad 
+            turno.especialidad = doctor.especialidad  # ahora es una instancia válida
             turno.save()
             return redirect('listar_turnos')
     else:
@@ -98,19 +96,22 @@ def crear_turno(request):
         form = TurnoForm(request.POST)
         if form.is_valid():
             turno = form.save(commit=False)
-            turno.paciente = Paciente.objects.get(user=request.user)
+            turno.paciente, _ = Paciente.objects.get_or_create(user=request.user, defaults={
+                'telefono': '',  # o datos por defecto válidos
+                'email': request.user.email or ''
+            })
             turno.save()
             mensaje = f"Hola {turno.paciente.user.username}, tu turno con el Dr. {turno.doctor.nombre} ha sido confirmado para el {turno.fecha} a las {turno.hora}."
             send_mail(
                 subject="Confirmación de Turno Médico",
                 message=mensaje,
-                from_email=None, 
+                from_email=None,
                 recipient_list=[turno.paciente.email],
                 fail_silently=False,
             )
             return redirect('listar_turnos')
     else:
-        form = TurnoForm()
+        form = TurnoForm(request.GET)
     return render(request, 'turnos/crear_turno.html', {'form': form})
 
 @login_required
@@ -140,37 +141,47 @@ def registrar_doctor(request):
 
 @login_required
 def reservar_turno(request):
-    if request.method == 'POST':
+    form = None
+    doctores_filtrados = None
+    if request.method == 'GET' and 'buscar' in request.GET:
+        form = TurnoForm(request.GET)
+    elif request.method == 'POST':
         form = TurnoForm(request.POST)
         if form.is_valid():
             turno = form.save(commit=False)
-            turno.paciente = request.user
+            turno.paciente = Paciente.objects.get(user=request.user)
             turno.save()
             return redirect('lista_turnos')
     else:
         form = TurnoForm()
-    return render(request, 'reservar_turno.html', {'form': form})
+    return render(request, 'turnos/reservar_turno.html', {
+        'form': form
+    })
+from django.utils import timezone
+
+def inicio(request):
+    total_turnos = Turno.objects.count()
+    total_doctores = Doctor.objects.count()
+    total_pacientes = Paciente.objects.count()
+    proximo_turno = Turno.objects.filter(fecha__gte=timezone.now()).order_by('fecha').first()
+    context = {
+        'total_turnos': total_turnos,
+        'total_doctores': total_doctores,
+        'total_pacientes': total_pacientes,
+        'proximo_turno': proximo_turno
+    }
+    return render(request, 'turnos/inicio.html', context)
 
 @login_required
-def editar_turno(request, pk):
-    turno = get_object_or_404(Turno, pk=pk)
-    if not request.user.perfil.es_paciente or turno.paciente.user != request.user:
-        return HttpResponseForbidden("No tienes permiso para editar este turno.")
+def crear_especialidad(request):
+    if not request.user.perfil.es_doctor and not request.user.is_superuser:
+        return HttpResponseForbidden("No tienes permiso para crear especialidades.")
     if request.method == 'POST':
-        form = TurnoForm(request.POST, instance=turno)
+        form = EspecialidadForm(request.POST)
         if form.is_valid():
             form.save()
-            return redirect('listar_turnos')
+            messages.success(request, "Especialidad creada correctamente.")
+            return redirect('inicio')
     else:
-        form = TurnoForm(instance=turno)
-    return render(request, 'turnos/editar_turno.html', {'form': form, 'turno': turno})
-
-@login_required
-def eliminar_turno(request, pk):
-    turno = get_object_or_404(Turno, pk=pk)
-    if not request.user.perfil.es_paciente or turno.paciente.user != request.user:
-        return HttpResponseForbidden("No tienes permiso para eliminar este turno.")
-    if request.method == 'POST':
-        turno.delete()
-        return redirect('listar_turnos')
-    return render(request, 'turnos/eliminar_turno.html', {'turno': turno})
+        form = EspecialidadForm()
+    return render(request, 'turnos/crear_especialidad.html', {'form': form})

@@ -1,9 +1,21 @@
 {% extends "turnos/base.html" %}
 {% block content %}
 <h2>Reservar un Turno</h2>
-<form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Reservar</button>
+<form method="get">
+    {{ form.especialidad.label_tag }}
+    {{ form.especialidad }}
+    <button type="submit">Buscar doctores</button>
 </form>
+{% if form.fields.doctor.queryset.exists %}
+    <form method="post">
+        {% csrf_token %}
+        {{ form.doctor.label_tag }}
+        {{ form.doctor }}
+        {{ form.fecha.label_tag }}
+        {{ form.fecha }}
+        {{ form.hora.label_tag }}
+        {{ form.hora }}
+        <button type="submit">Reservar</button>
+    </form>
+{% endif %}
 {% endblock %}

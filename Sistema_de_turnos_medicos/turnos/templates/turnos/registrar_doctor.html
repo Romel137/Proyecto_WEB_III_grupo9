@@ -1,9 +1,11 @@
 {% extends "turnos/base.html" %}
 {% block content %}
-<h2>Registro de Doctor</h2>
-<form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Registrarse como Doctor</button>
-</form>
+<div class="container mt-4">
+    <h2>Registrar Doctor</h2>
+    <form method="post" class="mt-3">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-success">Guardar Doctor</button>
+    </form>
+</div>
 {% endblock %}

@@ -1,21 +1,15 @@
 {% extends "turnos/base.html" %}
 {% block content %}
-<h2>Mis Turnos</h2>
-
-<ul>
-    {% for turno in turnos %}
-        <li>
-            <strong>Fecha:</strong> {{ turno.fecha }} - <strong>Hora:</strong> {{ turno.hora }} <br>
-            <strong>Doctor:</strong> Dr. {{ turno.doctor.user.get_full_name }} <br>
-            <strong>Especialidad:</strong> {{ turno.doctor.especialidad.nombre }} <br>
-            <a href="{% url 'editar_turno' turno.pk %}">✏️ Editar</a> |
-            <a href="{% url 'eliminar_turno' turno.pk %}">🗑 Eliminar</a>
-        </li>
-        <hr>
-    {% empty %}
-        <li>No tienes turnos agendados</li>
-    {% endfor %}
-</ul>
-
-<a href="{% url 'crear_turno' %}">➕ Reservar nuevo turno</a>
+<div class="container mt-4">
+    <h2 class="mb-3">Mis Turnos</h2>
+    <ul class="list-group">
+        {% for turno in turnos %}
+            <li class="list-group-item">
+                {{ turno.fecha }} - {{ turno.hora }} con {{ turno.doctor }}
+            </li>
+        {% empty %}
+            <li class="list-group-item">No tienes turnos agendados</li>
+        {% endfor %}
+    </ul>
+</div>
 {% endblock %}
