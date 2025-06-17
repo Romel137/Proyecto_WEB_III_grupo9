@@ -141,22 +141,22 @@ def cancelar_turno(request, turno_id):
 
 @login_required
 def sugerir_turno(request, doctor_id):
-    if not request.user.perfil.es_paciente:
-        return redirect('inicio')
     doctor = get_object_or_404(Doctor, id=doctor_id)
+    paciente = get_object_or_404(Paciente, user=request.user)
+
     if request.method == 'POST':
-        form = SugerirTurnoForm(request.POST)
+        form = SugerirTurnoForm(request.POST, doctor=doctor, paciente=paciente)
         if form.is_valid():
-            sugerencia = form.save(commit=False)
-            sugerencia.paciente = request.user.paciente
-            sugerencia.doctor = doctor
-            sugerencia.reservado = False
-            sugerencia.save()
-            messages.success(request, "Sugerencia enviada.")
-            return redirect('inicio')
+            form.save()
+            messages.success(request, "Has sugerido un turno al doctor.")
+            return redirect('mis_turnos')
     else:
-        form = SugerirTurnoForm(initial={'doctor': doctor})
-    return render(request, 'turnos/sugerir_turno.html', {'form': form, 'doctor': doctor})
+        form = SugerirTurnoForm(doctor=doctor, paciente=paciente)
+
+    return render(request, 'turnos/sugerir_turno.html', {
+        'form': form,
+        'doctor': doctor
+    })
 
 # ---------------------- DOCTOR - FICHAS ----------------------
 
