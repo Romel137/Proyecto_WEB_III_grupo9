@@ -15,6 +15,7 @@ class RegistroForm(UserCreationForm):
         ('paciente', 'Paciente'),
     )
     rol = forms.ChoiceField(choices=ROLES, widget=forms.RadioSelect)
+    email = forms.EmailField(label="Correo electrónico", required=True)
     class Meta:
         model = User
         fields = ['username', 'password1', 'password2', 'rol']
