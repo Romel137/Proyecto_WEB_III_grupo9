@@ -1,0 +1,68 @@
+{% extends "turnos/base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2 class="mb-4">Sugerir turno al doctor</h2>
+
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <form method="post" class="card p-4 shadow-sm">
+    {% csrf_token %}
+    <div class="mb-3">
+      <label for="id_especialidad" class="form-label">Especialidad</label>
+      {{ form.especialidad }}
+    </div>
+
+    <div class="mb-3">
+      <label for="id_doctor" class="form-label">Doctor</label>
+      {{ form.doctor }}
+    </div>
+
+    <div class="mb-3">
+      <label for="id_fecha" class="form-label">Fecha</label>
+      {{ form.fecha }}
+    </div>
+
+    <div class="mb-3">
+      <label for="id_hora" class="form-label">Hora</label>
+      {{ form.hora }}
+    </div>
+
+    <div class="d-grid">
+      <button type="submit" class="btn btn-warning">Sugerir turno</button>
+    </div>
+  </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const especialidadSelect = document.getElementById('id_especialidad');
+    const doctorSelect = document.getElementById('id_doctor');
+
+    especialidadSelect.addEventListener('change', function () {
+      const especialidadId = this.value;
+
+      fetch(`/ajax/doctores/?especialidad_id=${especialidadId}`)
+        .then(response => response.json())
+        .then(data => {
+          doctorSelect.innerHTML = '<option value="">Seleccione un doctor</option>';
+          data.forEach(doctor => {
+            const option = document.createElement('option');
+            option.value = doctor.id;
+            option.textContent = doctor.nombre;
+            doctorSelect.appendChild(option);
+          });
+        });
+    });
+  });
+</script>
+{% endblock %}

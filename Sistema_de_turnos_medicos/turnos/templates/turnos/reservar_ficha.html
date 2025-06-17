@@ -1,0 +1,13 @@
+{% extends "turnos/base.html" %}
+
+{% block content %}
+<h2>Reservar turno</h2>
+<p><strong>Doctor:</strong> {{ turno.doctor }}</p>
+<p><strong>Fecha:</strong> {{ turno.fecha }}</p>
+<p><strong>Hora:</strong> {{ turno.hora }}</p>
+
+<form method="post">
+  {% csrf_token %}
+  <button type="submit" class="btn btn-success">Confirmar reserva</button>
+</form>
+{% endblock %}

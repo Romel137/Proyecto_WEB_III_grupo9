@@ -1,0 +1,28 @@
+{% extends "turnos/base.html" %}
+
+{% block content %}
+<h2 class="mb-4">Mis Turnos Reservados</h2>
+
+{% if turnos %}
+  <div class="row row-cols-1 row-cols-md-2 g-3">
+    {% for turno in turnos %}
+      <div class="col">
+        <div class="card border-primary shadow-sm">
+          <div class="card-body">
+            <h5 class="card-title text-primary">{{ turno.fecha }} - {{ turno.hora }}</h5>
+            <p class="card-text mb-1"><strong>Doctor:</strong> {{ turno.doctor.usuario.get_full_name }}</p>
+            <p class="card-text mb-2"><strong>Especialidad:</strong> {{ turno.especialidad.nombre }}</p>
+            <a href="{% url 'cancelar_turno' turno.id %}" class="btn btn-outline-danger btn-sm">
+              Cancelar Turno
+            </a>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="alert alert-info text-center mt-4">
+    No tienes turnos reservados.
+  </div>
+{% endif %}
+{% endblock %}

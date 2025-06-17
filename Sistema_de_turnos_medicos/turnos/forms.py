@@ -101,3 +101,60 @@ class EspecialidadForm(forms.ModelForm):
         labels = {
             'nombre': 'Nombre de la Especialidad'
         }
+
+
+class ReservarTurnoForm(forms.ModelForm):
+    class Meta:
+        model = Turno
+        fields = []  
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+class SugerirTurnoForm(forms.ModelForm):
+    class Meta:
+        model = Turno
+        fields = ['especialidad', 'doctor', 'fecha', 'hora']
+        widgets = {
+            'fecha': DateInput(attrs={'type': 'date'}),
+            'hora': TimeInput(attrs={'type': 'time'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if 'especialidad' in self.data:
+            try:
+                esp_id = int(self.data.get('especialidad'))
+                self.fields['doctor'].queryset = Doctor.objects.filter(especialidad_id=esp_id)
+            except (ValueError, TypeError):
+                self.fields['doctor'].queryset = Doctor.objects.none()
+        elif getattr(self.instance, 'especialidad_id', None):
+            self.fields['doctor'].queryset = Doctor.objects.filter(especialidad=self.instance.especialidad)
+        else:
+            self.fields['doctor'].queryset = Doctor.objects.none()
+
+
+
+class CrearFichaForm(forms.ModelForm):
+    class Meta:
+        model = Turno
+        fields = ['fecha', 'hora']
+        widgets = {
+            'fecha': DateInput(attrs={'type': 'date'}),
+            'hora': TimeInput(attrs={'type': 'time'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        self.doctor = kwargs.pop('doctor', None)
+        super().__init__(*args, **kwargs)
+
+    def save(self, commit=True):
+        ficha = super().save(commit=False)
+        ficha.doctor = self.doctor
+        ficha.especialidad = self.doctor.especialidad
+        if commit:
+            ficha.save()
+        return ficha
+
+
+
