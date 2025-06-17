@@ -86,60 +86,6 @@ def detalle_doctor(request, pk):
     return render(request, 'turnos/detalle_doctor.html', {'form': form, 'doctor': doctor})
 
 @login_required
-<<<<<<< HEAD
-def listar_turnos(request):
-    if not request.user.perfil.es_paciente:
-        return HttpResponseForbidden("Solo los pacientes pueden ver sus turnos.")
-    paciente = Paciente.objects.get(user=request.user)
-    turnos = Turno.objects.filter(paciente=paciente)
-    return render(request, 'turnos/listar_turnos.html', {'turnos': turnos})
-
-@login_required
-def crear_turno(request):
-    if not request.user.perfil.es_paciente:
-        return HttpResponseForbidden("Solo los pacientes pueden crear turnos.")
-    if request.method == 'POST':
-        form = TurnoForm(request.POST)
-        if form.is_valid():
-            turno = form.save(commit=False)
-            turno.paciente, _ = Paciente.objects.get_or_create(user=request.user, defaults={
-                'telefono': '',  # o datos por defecto válidos
-                'email': request.user.email or ''
-            })
-            turno.save()
-            mensaje = f"Hola {turno.paciente.user.username}, tu turno con el Dr. {turno.doctor.user.get_full_name()} ha sido confirmado para el {turno.fecha} a las {turno.hora}."
-            send_mail(
-                subject="Confirmación de Turno Médico",
-                message=mensaje,
-                from_email=None,
-                recipient_list=[turno.paciente.email],
-                fail_silently=False,
-            )
-            return redirect('listar_turnos')
-    else:
-        form = TurnoForm(request.GET)
-    return render(request, 'turnos/crear_turno.html', {
-        'form': form,
-    'especialidad_seleccionada': request.GET.get('especialidad') or request.POST.get('especialidad')
-        })
-
-@login_required
-def mis_turnos(request):
-    try:
-        if request.user.perfil.es_paciente:
-            paciente = Paciente.objects.get(user=request.user)
-            turnos = Turno.objects.filter(paciente=paciente)
-        elif request.user.perfil.es_doctor:
-             doctor = Doctor.objects.get(user=request.user)
-             turnos = Turno.objects.filter(doctor=doctor)
-        else:
-            turnos = Turno.objects.none()
-    except:
-        turnos = Turno.objects.none()
-    return render(request, 'turnos/listar_turnos.html', {'turnos': turnos})
-
-=======
->>>>>>> 159897e375c1e5a0bed2799ad47f73d4a7625613
 def registrar_doctor(request):
     if request.method == 'POST':
         form = DoctorRegistroForm(request.POST)

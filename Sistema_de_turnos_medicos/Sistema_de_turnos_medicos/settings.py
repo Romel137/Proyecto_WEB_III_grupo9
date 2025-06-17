@@ -1,6 +1,6 @@
 
 
-
+from pathlib import Path
 CELERY_BROKER_URL = 'memory://'  # O usa RabbitMQ si prefieres
 CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
 
