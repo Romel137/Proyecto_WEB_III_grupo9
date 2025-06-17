@@ -101,7 +101,7 @@ def crear_turno(request):
                 'email': request.user.email or ''
             })
             turno.save()
-            mensaje = f"Hola {turno.paciente.user.username}, tu turno con el Dr. {turno.doctor.nombre} ha sido confirmado para el {turno.fecha} a las {turno.hora}."
+            mensaje = f"Hola {turno.paciente.user.username}, tu turno con el Dr. {turno.doctor.user.get_full_name()} ha sido confirmado para el {turno.fecha} a las {turno.hora}."
             send_mail(
                 subject="Confirmación de Turno Médico",
                 message=mensaje,
@@ -112,7 +112,10 @@ def crear_turno(request):
             return redirect('listar_turnos')
     else:
         form = TurnoForm(request.GET)
-    return render(request, 'turnos/crear_turno.html', {'form': form})
+    return render(request, 'turnos/crear_turno.html', {
+        'form': form,
+    'especialidad_seleccionada': request.GET.get('especialidad') or request.POST.get('especialidad')
+        })
 
 @login_required
 def mis_turnos(request):
