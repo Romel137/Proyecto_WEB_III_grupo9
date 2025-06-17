@@ -4,8 +4,15 @@
     <h2 class="mb-3">Lista de Doctores</h2>
     <ul class="list-group">
         {% for doctor in doctores %}
-            <li class="list-group-item">
-                {{ doctor.user.first_name }} {{ doctor.user.last_name }} - Especialidad: {{ doctor.especialidad }}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                <div>
+                    {{ doctor.user.first_name }} {{ doctor.user.last_name }} - Especialidad: {{ doctor.especialidad }}
+                </div>
+                {% if user.perfil.es_paciente %}
+                    <a href="{% url 'sugerir_turno' doctor.id %}" class="btn btn-sm btn-outline-primary">
+                        Sugerir Turno
+                    </a>
+                {% endif %}
             </li>
         {% endfor %}
     </ul>

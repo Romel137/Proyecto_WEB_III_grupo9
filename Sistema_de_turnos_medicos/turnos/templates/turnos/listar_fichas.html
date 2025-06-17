@@ -1,0 +1,31 @@
+{% extends "turnos/base.html" %}
+
+{% block content %}
+<h2 class="mb-4">Fichas Disponibles para Reservar</h2>
+
+{% if turnos %}
+  <div class="row row-cols-1 row-cols-md-2 g-3">
+    {% for ficha in turnos %}
+      {% if not ficha.reservado %}
+        <div class="col">
+          <div class="card border-info shadow-sm">
+            <div class="card-body">
+              <h5 class="card-title text-info">{{ ficha.fecha }} - {{ ficha.hora }}</h5>
+              <p class="card-text mb-1"><strong>Doctor:</strong> {{ ficha.doctor.usuario.get_full_name }}</p>
+              <p class="card-text"><strong>Especialidad:</strong> {{ ficha.especialidad.nombre }}</p>
+
+              <a href="{% url 'reservar_turno' ficha.id %}" class="btn btn-outline-primary btn-sm mt-2">
+                Reservar Turno
+              </a>
+            </div>
+          </div>
+        </div>
+      {% endif %}
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="alert alert-info text-center mt-4">
+    No hay fichas disponibles para reservar.
+  </div>
+{% endif %}
+{% endblock %}

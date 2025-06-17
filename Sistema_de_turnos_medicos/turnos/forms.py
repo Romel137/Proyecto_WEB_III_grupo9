@@ -5,6 +5,11 @@ from django.core.exceptions import ValidationError
 from .models import Turno, Especialidad, Doctor
 from django.forms import DateInput, TimeInput
 
+class TurnoForm(forms.ModelForm):
+    class Meta:
+        model = Turno
+        fields = ['fecha', 'hora', 'doctor']
+
 class RegistroForm(UserCreationForm):
     ROLES = (
         ('paciente', 'Paciente'),
@@ -19,36 +24,30 @@ from django import forms
 from .models import Turno, Especialidad, Doctor
 from django.forms.widgets import DateInput, TimeInput
 
-class TurnoForm(forms.ModelForm):
-    especialidad = forms.ModelChoiceField(
-        queryset=Especialidad.objects.all(),
-        required=True,
-        label="Especialidad"
-    )
-    doctor = forms.ModelChoiceField(
-        queryset=Doctor.objects.none(),
-        required=True,
-        label="Doctor"
-    )
+class SugerirTurnoForm(forms.ModelForm):
     class Meta:
         model = Turno
-        fields = ['especialidad', 'doctor', 'fecha', 'hora']
+        fields = ['fecha', 'hora']
         widgets = {
-            'fecha': DateInput(attrs={'type': 'date'}),
-            'hora': TimeInput(attrs={'type': 'time'}),
+            'fecha': DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'hora': TimeInput(attrs={'type': 'time', 'class': 'form-control'}),
         }
+
     def __init__(self, *args, **kwargs):
+        self.doctor = kwargs.pop('doctor', None)
+        self.paciente = kwargs.pop('paciente', None)
         super().__init__(*args, **kwargs)
-        if 'especialidad' in self.data:
-            try:
-                esp_id = int(self.data.get('especialidad'))
-                self.fields['doctor'].queryset = Doctor.objects.filter(especialidad_id=esp_id)
-            except (ValueError, TypeError):
-                self.fields['doctor'].queryset = Doctor.objects.none()
-        elif getattr(self.instance, 'especialidad_id', None):
-            self.fields['doctor'].queryset = Doctor.objects.filter(especialidad=self.instance.especialidad)
-        else:
-            self.fields['doctor'].queryset = Doctor.objects.none()
+
+    def save(self, commit=True):
+        turno = super().save(commit=False)
+        turno.doctor = self.doctor
+        turno.paciente = self.paciente
+        turno.estado = 'pendiente' 
+        turno.especialidad = self.doctor.especialidad
+        if commit:
+            turno.save()
+        return turno
+
 
 class DoctorRegistroForm(forms.ModelForm):
     first_name = forms.CharField(label="Nombre")
@@ -102,3 +101,37 @@ class EspecialidadForm(forms.ModelForm):
         labels = {
             'nombre': 'Nombre de la Especialidad'
         }
+
+
+class ReservarTurnoForm(forms.ModelForm):
+    class Meta:
+        model = Turno
+        fields = []  
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+
+class CrearFichaForm(forms.ModelForm):
+    class Meta:
+        model = Turno
+        fields = ['fecha', 'hora']
+        widgets = {
+            'fecha': DateInput(attrs={'type': 'date'}),
+            'hora': TimeInput(attrs={'type': 'time'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        self.doctor = kwargs.pop('doctor', None)
+        super().__init__(*args, **kwargs)
+
+    def save(self, commit=True):
+        ficha = super().save(commit=False)
+        ficha.doctor = self.doctor
+        ficha.especialidad = self.doctor.especialidad
+        if commit:
+            ficha.save()
+        return ficha
+
+
+

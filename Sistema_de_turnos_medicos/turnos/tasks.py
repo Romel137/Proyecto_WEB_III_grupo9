@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 from celery import shared_task
 from django.utils import timezone
 from turnos.models import Turno
@@ -31,3 +32,22 @@ def enviar_recordatorios_turnos():
                 recipient_list=[email],
                 fail_silently=False,
             )
+=======
+from django.utils import timezone
+from django.core.mail import send_mail
+from .models import Turno
+
+def enviar_recordatorios_doctores():
+    hoy = timezone.now().date()
+    pendientes = Turno.objects.filter(fecha=hoy, reservado=True, recordatorio_enviado=False)
+    for turno in pendientes:
+        doctor = turno.doctor
+        send_mail(
+            "Recordatorio de turno hoy",
+            f"Tienes una cita hoy con {turno.paciente} a las {turno.hora}.",
+            None,
+            [doctor.user.email]
+        )
+        turno.recordatorio_enviado = True
+        turno.save()
+>>>>>>> 159897e375c1e5a0bed2799ad47f73d4a7625613
