@@ -13,6 +13,7 @@ from .forms import (
     DoctorRegistroForm, CrearFichaForm, ReservarTurnoForm, SugerirTurnoForm
 )
 from .models import Turno, Doctor, Perfil, Paciente
+from .models import Especialidad
 
 # ---------------------- VISTAS GENERALES ----------------------
 
@@ -113,10 +114,12 @@ def mis_turnos(request):
     return redirect('inicio')
 
 @login_required
-def reservar_ficha(request, turno_id):
+def confirmar_reserva(request, turno_id):
     turno = get_object_or_404(Turno, id=turno_id, reservado=False)
+
     if not request.user.perfil.es_paciente:
         return redirect('inicio')
+
     if request.method == 'POST':
         form = ReservarTurnoForm(request.POST, instance=turno)
         if form.is_valid():
@@ -127,7 +130,62 @@ def reservar_ficha(request, turno_id):
             return redirect('mis_turnos')
     else:
         form = ReservarTurnoForm(instance=turno)
-    return render(request, 'turnos/reservar_ficha.html', {'form': form, 'turno': turno})
+
+    return render(request, 'turnos/confirmar_reserva.html', {'form': form, 'turno': turno})
+
+@login_required
+def reservar_ficha(request):
+    especialidades = Especialidad.objects.all()
+    doctores = Doctor.objects.all()
+    turnos_disponibles = None
+
+    especialidad_id = request.GET.get('especialidad')
+    doctor_id = request.GET.get('doctor')
+
+    if especialidad_id:
+        doctores = doctores.filter(especialidad_id=especialidad_id)
+
+    if doctor_id:
+        turnos_disponibles = Turno.objects.filter(
+            doctor_id=doctor_id,
+            reservado=False,
+            paciente__isnull=True
+        ).order_by('fecha', 'hora')
+
+    return render(request, 'turnos/reservar_ficha.html', {
+        'especialidades': especialidades,
+        'doctores': doctores,
+        'turnos': turnos_disponibles,
+        'selected_especialidad': especialidad_id,
+        'selected_doctor': doctor_id,
+    })
+
+@login_required
+def reservar_ficha_confirmar(request, turno_id):
+    turno = get_object_or_404(Turno, id=turno_id, reservado=False, paciente__isnull=True)
+
+    print("DEBUG Turno:", turno)
+    print("DEBUG Doctor del turno:", turno.doctor)
+    print("DEBUG User del doctor:", turno.doctor.user)
+    print("DEBUG Nombre:", turno.doctor.user.first_name)
+    print("DEBUG Apellido:", turno.doctor.user.last_name)
+
+    if request.method == 'POST':
+        try:
+            paciente = request.user.paciente
+        except Paciente.DoesNotExist:
+            messages.error(request, 'Este usuario no está registrado como paciente.')
+            return redirect('reservar_ficha')
+
+        turno.paciente = paciente
+        turno.reservado = True
+        turno.save()
+        messages.success(request, 'Turno reservado correctamente.')
+        return redirect('mis_turnos')
+
+    return render(request, 'turnos/reservar_confirmar.html', {'turno': turno})
+
+
 
 @login_required
 def cancelar_turno(request, turno_id):

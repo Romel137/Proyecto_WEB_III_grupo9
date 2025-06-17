@@ -1,3 +1,5 @@
+{% extends "turnos/base.html" %}
+{% block content %}
 <div class="mb-3">
     <label for="id_especialidad">Especialidad</label>
     {{ form.especialidad }}
@@ -6,7 +8,7 @@
     <label for="id_doctor">Doctor</label>
     {{ form.doctor }}
 </div>
-
+{% endblock %}
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
     $("#id_especialidad").change(function() {

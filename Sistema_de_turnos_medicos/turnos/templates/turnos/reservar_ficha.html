@@ -1,13 +1,66 @@
 {% extends "turnos/base.html" %}
+{% load static %}
+
+{% block title %}Reservar Ficha{% endblock %}
 
 {% block content %}
-<h2>Reservar turno</h2>
-<p><strong>Doctor:</strong> {{ turno.doctor }}</p>
-<p><strong>Fecha:</strong> {{ turno.fecha }}</p>
-<p><strong>Hora:</strong> {{ turno.hora }}</p>
+<h2 class="mb-4">Reservar Ficha Médica</h2>
 
-<form method="post">
-  {% csrf_token %}
-  <button type="submit" class="btn btn-success">Confirmar reserva</button>
+<form method="get" class="row g-3 mb-4">
+    <div class="col-md-6">
+        <label for="especialidad" class="form-label">Especialidad</label>
+        <select name="especialidad" id="especialidad" class="form-select" onchange="this.form.submit()">
+            <option value="">Seleccione una especialidad</option>
+            {% for especialidad in especialidades %}
+                <option value="{{ especialidad.id }}" {% if especialidad.id|stringformat:"s" == selected_especialidad %}selected{% endif %}>
+                    {{ especialidad.nombre }}
+                </option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="col-md-6">
+        <label for="doctor" class="form-label">Doctor</label>
+        <select name="doctor" id="doctor" class="form-select" onchange="this.form.submit()">
+            <option value="">Seleccione un doctor</option>
+            {% for doctor in doctores %}
+                <option value="{{ doctor.id }}" {% if doctor.id|stringformat:"s" == selected_doctor %}selected{% endif %}>
+                    Dr. {{ doctor.usuario.get_full_name }} - {{ doctor.especialidad.nombre }}
+                </option>
+            {% endfor %}
+        </select>
+    </div>
 </form>
+
+{% if turnos %}
+    <h4 class="mt-4">Turnos disponibles</h4>
+    <table class="table table-striped mt-2">
+        <thead>
+            <tr>
+                <th>Fecha</th>
+                <th>Hora</th>
+                <th>Doctor</th>
+                <th>Especialidad</th>
+                <th>Acción</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for turno in turnos %}
+                <tr>
+                    <td>{{ turno.fecha }}</td>
+                    <td>{{ turno.hora }}</td>
+                    <td>Dr. {{ turno.doctor.usuario.get_full_name }}</td>
+                    <td>{{ turno.doctor.especialidad.nombre }}</td>
+                    <td>
+                        <a href="{% url 'reservar_ficha_confirmar' turno.id %}" class="btn btn-success btn-sm">
+                            Reservar
+                        </a>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% elif selected_doctor %}
+    <div class="alert alert-warning mt-4">No hay turnos disponibles para este doctor.</div>
+{% endif %}
 {% endblock %}

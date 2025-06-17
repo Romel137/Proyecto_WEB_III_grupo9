@@ -1,0 +1,22 @@
+{% extends "turnos/base.html" %}
+
+{% block title %}Confirmar Reserva{% endblock %}
+
+{% block content %}
+    <h2>Confirmar Reserva de Turno</h2>
+
+    <div class="card mt-4">
+        <div class="card-body">
+            <p><strong>Debug: Doctor (str):</strong> {{ turno.doctor }}</p>
+            <p><strong>Doctor:</strong> Dr. {{ turno.doctor.user.first_name }} {{ turno.doctor.user.last_name }}</p>
+            <p><strong>Username:</strong> {{ turno.doctor.user.username }}</p>
+            <p><strong>Especialidad:</strong> {{ turno.doctor.especialidad.nombre }}</p>
+
+            <form method="post">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-success">Confirmar Reserva</button>
+                <a href="{% url 'reservar_ficha' %}" class="btn btn-secondary">Cancelar</a>
+            </form>
+        </div>
+    </div>
+{% endblock %}

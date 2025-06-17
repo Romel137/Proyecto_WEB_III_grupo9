@@ -14,15 +14,23 @@ urlpatterns = [
     path('crear-especialidad/', views.crear_especialidad, name='crear_especialidad'),
     path('crear-ficha/', views.crear_ficha, name='crear_ficha'),
 
-    path('reservar-ficha/<int:turno_id>/', views.reservar_ficha, name='reservar_ficha'),
+   
     path('sugerir-turno/<int:doctor_id>/', views.sugerir_turno, name='sugerir_turno'),
     
     path('ajax/doctores/', views.obtener_doctores_por_especialidad, name='obtener_doctores'),
 
+
+    path('reservar/', views.reservar_ficha, name='reservar_ficha'),
+    path('reservar/<int:turno_id>/', views.confirmar_reserva, name='confirmar_reserva'),
+
     
     path('crear-ficha/', views.crear_ficha, name='crear_ficha'),
-    path('reservar/<int:turno_id>/', views.reservar_ficha, name='reservar_turno'),
+    
     path('cancelar/<int:turno_id>/', views.cancelar_turno, name='cancelar_turno'),
+    
+    path('turno/reservar/<int:turno_id>/', views.reservar_ficha_confirmar, name='reservar_ficha_confirmar'),
+
+    
     path('reservar_turno/<int:turno_id>/', views.reservar_ficha, name='reservar_turno'),
     path('sugerir-turno/<int:doctor_id>/', views.sugerir_turno, name='sugerir_turno'),
 

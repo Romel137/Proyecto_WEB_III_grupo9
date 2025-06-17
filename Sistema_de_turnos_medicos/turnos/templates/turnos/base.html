@@ -114,12 +114,10 @@
                             </li>
                         {% elif user.perfil.es_paciente %}
                             <li class="nav-item">
-                                <li class="nav-item">
+                                <a class="nav-link" href="{% url 'reservar_ficha'%}">Reservar Ficha</a>
+                            </li>
+                            <li class="nav-item">
                                 <a class="nav-link" href="{% url 'listar_doctores' %}">Sugerir Turno</a>
-                                </li>
-
-
-
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link" href="{% url 'mis_turnos' %}">Mis Turnos</a>
@@ -171,4 +169,3 @@
     {% block extra_js %}{% endblock %}
 </body>
 </html>
-

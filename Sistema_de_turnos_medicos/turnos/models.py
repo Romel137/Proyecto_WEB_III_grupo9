@@ -11,7 +11,11 @@ class Doctor(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='doctor_profile')
     especialidad = models.ForeignKey(Especialidad, on_delete=models.CASCADE, related_name='doctors')
     def __str__(self):
-        return f"Dr. {self.user.first_name} {self.user.last_name} ({self.especialidad.nombre})"
+        nombre = self.user.get_full_name().strip()
+        if not nombre:
+                nombre = self.user.username
+        return f"Dr. {nombre} ({self.especialidad.nombre})"
+
 
 class Paciente(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
