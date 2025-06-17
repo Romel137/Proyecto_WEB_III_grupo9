@@ -1,4 +1,3 @@
-# views.py
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
@@ -6,14 +5,13 @@ from django.http import HttpResponseForbidden, JsonResponse
 from django.contrib import messages
 from django.contrib.auth.forms import AuthenticationForm
 from django.utils import timezone
-from django.core.mail import send_mail
 
 from .forms import (
     RegistroForm, TurnoForm, EspecialidadForm,
     DoctorRegistroForm, CrearFichaForm, ReservarTurnoForm, SugerirTurnoForm
 )
-from .models import Turno, Doctor, Perfil, Paciente
-from .models import Especialidad
+from .models import Turno, Doctor, Perfil, Paciente, Especialidad
+
 
 # ---------------------- VISTAS GENERALES ----------------------
 
@@ -26,6 +24,7 @@ def inicio(request):
     }
     return render(request, 'turnos/inicio.html', context)
 
+
 def registro(request):
     if request.method == 'POST':
         form = RegistroForm(request.POST)
@@ -33,17 +32,20 @@ def registro(request):
             user = form.save()
             perfil = Perfil.objects.create(user=user)
             rol = form.cleaned_data['rol']
+
             if rol == 'paciente':
                 perfil.es_paciente = True
                 Paciente.objects.create(user=user, email=user.email or '', telefono='')
             elif rol == 'doctor':
                 perfil.es_doctor = True
+
             perfil.save()
             login(request, user)
             return redirect('inicio')
     else:
         form = RegistroForm()
     return render(request, 'turnos/registro.html', {'form': form})
+
 
 def iniciar_sesion(request):
     if request.method == 'POST':
@@ -57,10 +59,12 @@ def iniciar_sesion(request):
         form = AuthenticationForm()
     return render(request, 'turnos/login.html', {'form': form})
 
+
 def cerrar_sesion(request):
     logout(request)
     messages.info(request, 'Sesión cerrada.')
     return redirect('inicio')
+
 
 # ---------------------- DOCTORES ----------------------
 
@@ -68,11 +72,14 @@ def listar_doctores(request):
     doctores = Doctor.objects.all()
     return render(request, 'turnos/listar_doctores.html', {'doctores': doctores})
 
+
 @login_required
 def detalle_doctor(request, pk):
     doctor = get_object_or_404(Doctor, pk=pk)
+
     if not request.user.perfil.es_paciente:
-        return HttpResponseForbidden("Solo pacientes pueden agendar.")
+        return HttpResponseForbidden("Solo los pacientes pueden agendar turnos.")
+
     if request.method == 'POST':
         form = TurnoForm(request.POST)
         if form.is_valid():
@@ -81,18 +88,30 @@ def detalle_doctor(request, pk):
             turno.doctor = doctor
             turno.especialidad = doctor.especialidad
             turno.save()
-            return redirect('listar_turnos')
+            messages.success(request, "Turno reservado.")
+            return redirect('mis_turnos')
     else:
         form = TurnoForm(initial={'doctor': doctor, 'especialidad': doctor.especialidad})
+
     return render(request, 'turnos/detalle_doctor.html', {'form': form, 'doctor': doctor})
 
-@login_required
+
+from django.contrib.auth import login
+
 def registrar_doctor(request):
     if request.method == 'POST':
         form = DoctorRegistroForm(request.POST)
         if form.is_valid():
-            form.save()
-            return redirect('iniciar_sesion')
+            doctor = form.save()
+            user = doctor.user
+            # Crear perfil del doctor
+            perfil, created = Perfil.objects.get_or_create(user=user)
+            perfil.es_doctor = True
+            perfil.save()
+            # Iniciar sesión automáticamente
+            login(request, user)
+            messages.success(request, "Doctor registrado y sesión iniciada.")
+            return redirect('listar_fichas')
     else:
         form = DoctorRegistroForm()
     return render(request, 'turnos/registrar_doctor.html', {'form': form})
@@ -100,25 +119,19 @@ def registrar_doctor(request):
 # ---------------------- PACIENTE - TURNOS ----------------------
 
 @login_required
-def listar_turnos(request):
-    if not request.user.perfil.es_paciente:
-        return HttpResponseForbidden("Solo los pacientes pueden ver sus turnos.")
-    turnos = Turno.objects.filter(paciente=request.user.paciente)
-    return render(request, 'turnos/listar_turnos.html', {'turnos': turnos})
-
-@login_required
 def mis_turnos(request):
     if request.user.perfil.es_paciente:
         turnos = Turno.objects.filter(paciente=request.user.paciente).order_by('fecha', 'hora')
         return render(request, 'turnos/mis_turnos.html', {'turnos': turnos})
-    return redirect('inicio')
+    return HttpResponseForbidden("No tienes permiso para ver esta sección.")
+
 
 @login_required
 def confirmar_reserva(request, turno_id):
     turno = get_object_or_404(Turno, id=turno_id, reservado=False)
 
     if not request.user.perfil.es_paciente:
-        return redirect('inicio')
+        return HttpResponseForbidden("Acceso denegado.")
 
     if request.method == 'POST':
         form = ReservarTurnoForm(request.POST, instance=turno)
@@ -132,6 +145,7 @@ def confirmar_reserva(request, turno_id):
         form = ReservarTurnoForm(instance=turno)
 
     return render(request, 'turnos/confirmar_reserva.html', {'form': form, 'turno': turno})
+
 
 @login_required
 def reservar_ficha(request):
@@ -160,24 +174,16 @@ def reservar_ficha(request):
         'selected_doctor': doctor_id,
     })
 
+
 @login_required
 def reservar_ficha_confirmar(request, turno_id):
     turno = get_object_or_404(Turno, id=turno_id, reservado=False, paciente__isnull=True)
 
-    print("DEBUG Turno:", turno)
-    print("DEBUG Doctor del turno:", turno.doctor)
-    print("DEBUG User del doctor:", turno.doctor.user)
-    print("DEBUG Nombre:", turno.doctor.user.first_name)
-    print("DEBUG Apellido:", turno.doctor.user.last_name)
+    if not request.user.perfil.es_paciente:
+        return HttpResponseForbidden("Acceso denegado.")
 
     if request.method == 'POST':
-        try:
-            paciente = request.user.paciente
-        except Paciente.DoesNotExist:
-            messages.error(request, 'Este usuario no está registrado como paciente.')
-            return redirect('reservar_ficha')
-
-        turno.paciente = paciente
+        turno.paciente = request.user.paciente
         turno.reservado = True
         turno.save()
         messages.success(request, 'Turno reservado correctamente.')
@@ -186,20 +192,26 @@ def reservar_ficha_confirmar(request, turno_id):
     return render(request, 'turnos/reservar_confirmar.html', {'turno': turno})
 
 
-
 @login_required
 def cancelar_turno(request, turno_id):
     turno = get_object_or_404(Turno, id=turno_id)
+
     if turno.paciente != request.user.paciente:
         messages.error(request, "No puedes cancelar un turno ajeno.")
         return redirect('mis_turnos')
+
     turno.delete()
     messages.success(request, "Turno cancelado.")
     return redirect('mis_turnos')
 
+
 @login_required
 def sugerir_turno(request, doctor_id):
     doctor = get_object_or_404(Doctor, id=doctor_id)
+
+    if not request.user.perfil.es_paciente:
+        return HttpResponseForbidden("Solo los pacientes pueden sugerir turnos.")
+
     paciente = get_object_or_404(Paciente, user=request.user)
 
     if request.method == 'POST':
@@ -216,35 +228,42 @@ def sugerir_turno(request, doctor_id):
         'doctor': doctor
     })
 
+
 # ---------------------- DOCTOR - FICHAS ----------------------
 
 @login_required
 def crear_ficha(request):
     if not request.user.perfil.es_doctor:
-        return redirect('inicio')
+        return HttpResponseForbidden("Solo los doctores pueden crear fichas.")
+
     if request.method == 'POST':
         form = CrearFichaForm(request.POST, doctor=request.user.doctor)
         if form.is_valid():
             form.save()
-            messages.success(request, "Ficha creada.")
+            messages.success(request, "Ficha creada correctamente.")
             return redirect('listar_fichas')
     else:
         form = CrearFichaForm(doctor=request.user.doctor)
+
     return render(request, 'turnos/crear_ficha.html', {'form': form})
+
 
 @login_required
 def listar_fichas(request):
     if not request.user.perfil.es_doctor:
-        return redirect('inicio')
+        return HttpResponseForbidden("Solo los doctores pueden ver sus fichas.")
+    
     turnos = Turno.objects.filter(doctor=request.user.doctor, paciente__isnull=True).order_by('fecha', 'hora')
     return render(request, 'turnos/listar_fichas.html', {'turnos': turnos})
+
 
 # ---------------------- ESPECIALIDADES y AJAX ----------------------
 
 @login_required
 def crear_especialidad(request):
-    if not request.user.perfil.es_doctor and not request.user.is_superuser:
+    if not (request.user.perfil.es_doctor or request.user.is_superuser):
         return HttpResponseForbidden("Sin permiso.")
+    
     if request.method == 'POST':
         form = EspecialidadForm(request.POST)
         if form.is_valid():
@@ -254,6 +273,7 @@ def crear_especialidad(request):
     else:
         form = EspecialidadForm()
     return render(request, 'turnos/crear_especialidad.html', {'form': form})
+
 
 def obtener_doctores_por_especialidad(request):
     especialidad_id = request.GET.get('especialidad_id')

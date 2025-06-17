@@ -1,32 +1,32 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
+from django.utils import timezone
+
 
 class Especialidad(models.Model):
     nombre = models.CharField(max_length=100, unique=True)
+
     def __str__(self):
         return self.nombre
 
+
 class Doctor(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='doctor_profile')
-    especialidad = models.ForeignKey(Especialidad, on_delete=models.CASCADE, related_name='doctors')
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    especialidad = models.ForeignKey('Especialidad', on_delete=models.CASCADE)
+
     def __str__(self):
-        nombre = self.user.get_full_name().strip()
-        if not nombre:
-                nombre = self.user.username
-        return f"Dr. {nombre} ({self.especialidad.nombre})"
+        return f'{self.user.get_full_name()} ({self.especialidad})'
 
 
 class Paciente(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     telefono = models.CharField(max_length=20)
     email = models.EmailField()
+
     def __str__(self):
         return self.user.get_full_name() or self.user.username
 
-from django.db import models
-from django.core.exceptions import ValidationError
-from django.utils import timezone
 
 class Turno(models.Model):
     paciente = models.ForeignKey('Paciente', on_delete=models.CASCADE, null=True, blank=True)
@@ -99,9 +99,6 @@ class Perfil(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     es_paciente = models.BooleanField(default=False)
     es_doctor = models.BooleanField(default=False)
+
     def __str__(self):
         return self.user.username
-
-
-reservado = models.BooleanField(default=False)
-recordatorio_enviado = models.BooleanField(default=False)

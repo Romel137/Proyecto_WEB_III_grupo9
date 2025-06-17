@@ -5,12 +5,16 @@ urlpatterns = [
     path('', views.inicio, name='inicio'),
     path('doctores/', views.listar_doctores, name='listar_doctores'),
     path('doctor/<int:pk>/', views.detalle_doctor, name='detalle_doctor'),
-    path('turnos/', views.listar_turnos, name='listar_turnos'),
+    
+    path('listar-fichas/', views.listar_fichas, name='listar_fichas'),
+
+
     path('registro/', views.registro, name='registro'),
     path('login/', views.iniciar_sesion, name='iniciar_sesion'),
+
     path('logout/', views.cerrar_sesion, name='cerrar_sesion'),
     path('mis-turnos/', views.mis_turnos, name='mis_turnos'),
-    path('registro-doctor/', views.registrar_doctor, name='registro_doctor'),
+    
     path('crear-especialidad/', views.crear_especialidad, name='crear_especialidad'),
     path('crear-ficha/', views.crear_ficha, name='crear_ficha'),
 
@@ -23,6 +27,9 @@ urlpatterns = [
     path('reservar/', views.reservar_ficha, name='reservar_ficha'),
     path('reservar/<int:turno_id>/', views.confirmar_reserva, name='confirmar_reserva'),
 
+    
+    path('registro/', views.registro, name='registro'),
+    path('registrar-doctor/', views.registrar_doctor, name='registrar_doctor'),
     
     path('crear-ficha/', views.crear_ficha, name='crear_ficha'),
     
